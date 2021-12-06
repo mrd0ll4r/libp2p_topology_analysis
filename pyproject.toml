@@ -1,0 +1,17 @@
+[tool.poetry]
+name = "libp2p_topology_analysis"
+version = "0.1.0"
+description = "Graph-related metrics on libp2p overlay networks."
+authors = ["Your Name <you@example.com>"]
+license = "MIT"
+
+[tool.poetry.dependencies]
+python = "^3.9"
+pandas = "^1.3.4"
+igraph = "^0.9.8"
+
+[tool.poetry.dev-dependencies]
+
+[build-system]
+requires = ["poetry-core>=1.0.0"]
+build-backend = "poetry.core.masonry.api"
