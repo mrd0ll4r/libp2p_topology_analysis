@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 import random
 import util
+import pandas as pd
 
 def generate_n_erg(num_nodes, num_edges, N):
     erg_list = [ig.GraphBase.Erdos_Renyi(n=num_nodes, m=num_edges, directed=True) for i in range(0, N)]
@@ -15,7 +16,7 @@ def generate_n_bag(num_nodes, num_edges_total, N):
 ## TODO: normalize betweenness
 ## Expects: (1) a list of igraph objects, (2) the type of the graphs as string.
 ## Outputs: A pandas DF with many interesting metrics for all graphs
-def metrics_for_graphs(glist, gtype):
+def metrics_for_graphs(glist, gtype, id):
     metric_df = pd.DataFrame({
         'node_count': [g.vcount() for g in glist],
         'edge_count': [g.ecount() for g in glist],
@@ -25,7 +26,8 @@ def metrics_for_graphs(glist, gtype):
         'betweenness': [max(g.betweenness()) for g in glist],
         'closeness': [max(g.closeness()) for g in glist],
         'pagerank': [max(g.personalized_pagerank()) for g in glist],
-        'graph_type': [gtype for i in range(0, len(glist))]
+        'graph_type': [gtype for i in range(0, len(glist))],
+        'id': [id for i in range(0, len(glist))]
     })
     return metric_df
 
