@@ -1,4 +1,7 @@
 import argparse
+
+import pandas as pd
+
 import util
 import igraph_metrics
 
@@ -10,12 +13,18 @@ if __name__ == "__main__":
     parser.add_argument("--num_rand_graphs", metavar="N", type=int, default=5, help="Number of random graphs that should be generated.")
     parser.add_argument("--graph_metrics", action="store_true", default=False, help="Should we compute graph metrics on the given topologies?")
     parser.add_argument("--resilience", action="store_true", help="Should we do a resilience analysis?")
-    parser.add_argument("--output_path", default="./", help="Path to output CSVs to.")
+    parser.add_argument("--output_path", default="plot_data/", help="Path to output CSVs to.")
 
     args = parser.parse_args()
 
+    aggregated_metrics = pd.DataFrame()
+    cids = []
     for crawl_id, g in util.parse_db_dump(args.path, chunksize=args.chunksize):
         print(f"Crawl_id {crawl_id}. Nodes: {g.vcount()}, Edges: {g.ecount()}.")
         if args.graph_metrics:
             metric_df = igraph_metrics.metrics_for_graphs([g], "ipfs", crawl_id)
             metric_df.to_csv(f"{args.output_path}gmetrics_{crawl_id}.csv")
+            aggregated_metrics = aggregated_metrics.append(metric_df)
+            cids.append(crawl_id)
+
+    aggregated_metrics.to_csv(f"graph_metrics_{cids[0]}_{cids[-1]}.csv")
