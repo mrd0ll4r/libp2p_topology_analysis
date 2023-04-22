@@ -1,53 +1,31 @@
 #!/usr/bin/env python3
-import numpy as np
-import pandas as pd
 
-import util
 import random
+import igraph as ig
+import pandas as pd
+import numpy as np
 
-def randomRemoval(graph, removal_ratio=0.9):
-    num_removals = int(round(graph.vcount()*removal_ratio, 0))
+
+# Removes nodes, one by one, and records the percentage of remaining nodes in
+# the largest connected component.
+# Uses a function of the graph to determine which node to remove next.
+def targeted_removal(graph: ig.Graph, removal_func, removal_ratio=0.9):
     num_nodes_before = graph.vcount()
     percentage_in_conn_comp = []
-    ratio_removed = np.arange(0.0, removal_ratio, 1/num_nodes_before)
-    for i in range(0, num_removals):
-        ## Very basic progress indicator
-        if i % 100 == 0:
-            print(i*100/num_removals)
+    ratio_removed = np.arange(0.0, removal_ratio, 1 / num_nodes_before)
 
-        rand_vid = random.randrange(0, num_nodes_before - i)
-        graph.delete_vertices(rand_vid)
-        ## components.sizes() gives a descending list of the vcount of connected components.
-        ## components.size(<index>) seems to give the size of the specified index. So 0 => max?
-        ## Vertices are strongly connected if there's a path in *both* directions, i.e.,
-        ## u, v \in V have a path u -> v and v -> u.
-        ## I think for our purposes weak connectedness is more useful, but this should be discussed (<- ToDo)
-        ## We calculate the percentage of nodes contained in the biggest connected component.
-        ## To avoid recalculating graph.vcount() everytime we use our loop index for that.
-        percentage_in_conn_comp.append(graph.components(mode="weak").size(0)*100/(num_nodes_before - i - 1))
-
-    return pd.DataFrame({
-        "ratio_removed": ratio_removed,
-        "percentage_in_conn_comp": percentage_in_conn_comp
-    })
-
-## Same considerations apply as for randomRemoval.
-## This expects a removal_metric function which sorts the vertices in each iteration
-## and removes the highest-ranked on.
-def targetedRemoval(graph, removal_func, removal_ratio=0.9):
-    num_removals = int(round(graph.vcount()*removal_ratio, 0))
-    num_nodes_before = graph.vcount()
-    percentage_in_conn_comp = []
-    ratio_removed = np.arange(0.0, removal_ratio, 1/num_nodes_before)
-
-    for i in range(0, num_removals):
-        ## Very basic progress indicator
-        if i % 100 == 0:
-            print(i*100/num_removals)
-
+    for _x in ratio_removed:
         target_vertex = removal_func(graph)
         graph.delete_vertices(target_vertex)
-        percentage_in_conn_comp.append(graph.components(mode="weak").size(0)*100/(num_nodes_before - i - 1))
+
+        # components.sizes() gives a descending list of the vcount of connected components.
+        # components.size(<index>) seems to give the size of the specified index. So 0 => max?
+        # Vertices are strongly connected if there's a path in *both* directions, i.e.,
+        # u, v \in V have a path u -> v and v -> u.
+        # I think for our purposes weak connectedness is more useful, but this should be discussed (<- ToDo)
+        # We calculate the percentage of nodes contained in the biggest connected component.
+        percentage_in_conn_comp.append(
+            graph.components(mode="weak").size(0) * 100 / (graph.vcount()))
 
     return pd.DataFrame({
         "ratio_removed": ratio_removed,
@@ -55,36 +33,31 @@ def targetedRemoval(graph, removal_func, removal_ratio=0.9):
     })
 
 
-def repeated_random_resilience(graph, removal_ratio, num_iterations):
+def maxdeg_removal(graph: ig.Graph, removal_ratio=0.9):
+    # Function to select the node with the maximum combined degree.
+    def maxdegree_selection(graph: ig.Graph):
+        return graph.vs.select(_degree_eq=graph.maxdegree(mode="all"))[0]
+
+    return targeted_removal(graph, maxdegree_selection, removal_ratio)
+
+
+# Removes nodes randomly, one by one, and records the percentage of remaining
+# nodes in the largest connected component.
+def random_removal(graph: ig.Graph, removal_ratio=0.9):
+    def random_selection(graph: ig.Graph):
+        return random.randrange(0, graph.vcount())
+
+    return targeted_removal(graph, random_selection, removal_ratio)
+
+
+# Performs num_iterations iterations of random_removal.
+def repeated_random_removal(graph: ig.Graph, removal_ratio=0.9,
+                            num_iterations=10):
     df_list = []
     for i in range(0, num_iterations):
         g_copy = graph.copy()
-        tmp_res = randomRemoval(g_copy, removal_ratio)
-        tmp_res["iteration"] = [i for j in range(0, len(tmp_res))]
+        tmp_res = random_removal(g_copy, removal_ratio)
+        tmp_res["iteration"] = [i for _ in range(0, len(tmp_res))]
         df_list.append(tmp_res.copy())
 
     return df_list
-
-
-if __name__ == "__main__":
-    ## Set random seed for reproducible node/edge removals
-    rnd_seed = 0
-    random.seed(rnd_seed)
-    ## How many iterations of removals should we do?
-    n = 10
-
-    ## The targetedRemoval function takes a node ranking metric.
-    ## We use the maximum degree as a start
-    maxdeg_func = lambda g: g.vs.select(_degree=g.maxdegree())[0]
-
-    ## Load the graph
-    g = util.load_graph_data()
-
-    ## Copy the original graph before removing things on it
-    g_copy = g.copy()
-    targeted_res = targetedRemoval(g_copy, maxdeg_func, 0.9)
-    g_copy = g.copy()
-    random_res = repeated_random_resilience(g_copy, 0.9, n)
-
-    targeted_res.to_csv("targeted_resilience.csv", index=False, header=True)
-    pd.concat(random_res).to_csv("random_resilience.csv", index=False, header=True)
