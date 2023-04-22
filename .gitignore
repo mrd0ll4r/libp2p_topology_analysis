@@ -1,0 +1,14 @@
+# Vim undo files
+*.un~
+
+# Default input path
+/edge_lists
+
+# Default output path
+/csv
+
+# Python caches, I guess?
+__pycache__
+
+# IDE files
+/.idea
