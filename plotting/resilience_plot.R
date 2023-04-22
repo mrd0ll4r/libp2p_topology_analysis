@@ -6,6 +6,7 @@ library(dplyr)
 library(tidyr)
 library(ggplot2)
 library(tikzDevice)
+library(pracma)
 
 dir.create("fig", showWarnings = TRUE, recursive = TRUE, mode = "0777")
 
