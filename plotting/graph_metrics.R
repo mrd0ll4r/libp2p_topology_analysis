@@ -53,7 +53,7 @@ for (n in networks) {
   addtorow$pos = list(0)
   addtorow$command = sprintf('& \\multicolumn{3}{c}{%s} & \\multicolumn{3}{c}{Erdös-Renyi} & \\multicolumn{3}{c}{Barabasi-Albert} \\\\
   \\cmidrule(lr){2-4} \\cmidrule(lr){5-7} \\cmidrule(lr){8-10}
-  Metric & $\\mu$ & +CI & -CI & $\\mu$ & +CI & -CI & $\\mu$ & +CI & -CI', graph_type_name)
+  Metric & $\\mu$ & +CI & -CI & $\\mu$ & +CI & -CI & $\\mu$ & +CI & -CI \\\\', graph_type_name)
   
   # Alternative format which is very wide:
   # t <- d_agg %>% 
