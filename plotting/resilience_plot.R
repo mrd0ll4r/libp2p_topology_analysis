@@ -78,8 +78,7 @@ plot_random_plot <- function(d) {
     geom_line(aes(y = ci_upper), alpha = 0.5, linewidth=theme_get()$line$linewidth*0.5) +
     xlab("Percentage removed") +
     ylab("Perc. in conn. comp.") +
-    scale_x_continuous(breaks = seq(0, 100, 10)) +
-    facet_wrap(c("graph_type"),dir="v")
+    scale_x_continuous(breaks = seq(0, 100, 10))
   
   return(p)
 }
@@ -105,7 +104,8 @@ plot_random_multi <- function(input_files) {
     rm(d)
   }
   
-  p <- plot_random_plot(d_full)
+  p <- plot_random_plot(d_full) +
+    facet_wrap(c("graph_type"),dir="v")
   
   return(p)
 }
@@ -131,8 +131,7 @@ plot_targeted_plot <- function(d) {
     geom_line() +
     xlab("Percentage removed") +
     ylab("Perc. in conn. comp") +
-    scale_x_continuous(breaks = seq(0, 100, 10)) +
-    facet_wrap(c("graph_type"),dir="v")
+    scale_x_continuous(breaks = seq(0, 100, 10))
   
   return(p)
 }
@@ -156,7 +155,8 @@ plot_targeted_multi <- function(input_files) {
     rm(d)
   }
   
-  p <- plot_targeted_plot(d_full)
+  p <- plot_targeted_plot(d_full) +
+    facet_wrap(c("graph_type"),dir="v")
   
   return(p)
 }
